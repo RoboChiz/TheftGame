@@ -33,14 +33,12 @@ public class Player : MonoBehaviour
     public float searchRadius = 1f; //How high a ledge can be before it'll be grabbed - 2f
     public float hangHeight = 1.25f; //Height that the play hangs from
 
+    public Transform armsAnimator;
+
     public Transform leftHandTransform;
-    public Transform leftUpTransform;
-    public Transform leftDownTransform;
     private Arm left;
 
     public Transform rightHandTransform;
-    public Transform rightUpTransform;
-    public Transform rightDownTransform;
     private Arm right;
 
     public MouseLook headCam;
@@ -73,8 +71,8 @@ public class Player : MonoBehaviour
     // Use this for initialization
     void Start()
     {
-        left = new Arm(leftHandTransform, leftUpTransform, leftDownTransform, true);
-        right = new Arm(rightHandTransform, rightUpTransform, rightDownTransform, false);
+        left = new Arm(leftHandTransform, true);
+        right = new Arm(rightHandTransform, false);
     }
 
     // Update is called once per frame
@@ -155,6 +153,9 @@ public class Player : MonoBehaviour
         left.Update();
         right.Update();
 
+        left.SetHandRotation(Quaternion.LookRotation(Vector3.up, -moveForward));
+        right.SetHandRotation(Quaternion.LookRotation(Vector3.up, -moveForward));
+
         //Calculate isFalling
         if (Physics.Raycast(transform.position, Vector3.down, 1.25f))
         {
@@ -198,6 +199,10 @@ public class Player : MonoBehaviour
         //Grabbing Mechanics
         if (grabbing)
         {
+            armsAnimator.parent = null;
+            armsAnimator.position = transform.position + new Vector3(0f, 0.6f, 0f);
+            armsAnimator.rotation = Quaternion.LookRotation(moveForward,Vector3.up);
+
             //Update Hand Positions
             UpdateHands();
 
@@ -228,6 +233,12 @@ public class Player : MonoBehaviour
 
             }
         }
+        else
+        {
+            armsAnimator.parent = transform;
+            moveForward = transform.forward;
+            moveRight = transform.right;
+        }
 
     }
 
@@ -236,13 +247,6 @@ public class Player : MonoBehaviour
         int layerMask = 1 << 8;
         RaycastHit[] nearbyPoints = Physics.SphereCastAll(transform.position, searchRadius, Vector3.up, maxLedgeHeight, layerMask, QueryTriggerInteraction.Collide);
 
-        /*//Debug
-        Vector3 startPos = transform.position + (Vector3.up * maxLedgeDistance);
-        Debug.DrawLine(startPos, startPos + (Vector3.up * searchRadius),Color.green);
-        Debug.DrawLine(startPos, startPos + (Vector3.up * -searchRadius), Color.green);
-        Debug.DrawLine(startPos, startPos + (Vector3.right * searchRadius), Color.green);
-        Debug.DrawLine(startPos, startPos + (Vector3.right * -searchRadius), Color.green);
-        */
         if (nearbyPoints != null && nearbyPoints.Length > 0)
         {
             Vector3 halfRight = moveRight / 2f;
@@ -370,32 +374,38 @@ public class Player : MonoBehaviour
 public class Arm
 {
     private Transform hand;
-    private Transform downArm; //Connect to Hand and Up Arm
-    private Transform upArm;//Connect to Low Arm and Player
+    private Transform foreArm; //Connect to Hand and Up Arm
+    private Transform bicep;//Connect to Low Arm and Player
 
     private Transform parent;
 
     private Vector3 newHandPosition;
-
+    private Quaternion newHandRotation;
+    
     private static float handSpeed = 10f;
     private bool left;
     private bool goHome;
 
-    public Arm(Transform nHand, Transform nUp, Transform nDown, bool leftQuestion)
+    public Arm(Transform nHand, bool leftQuestion)
     {
         hand = nHand;
-        upArm = nUp;
-        downArm = nDown;
 
         left = leftQuestion;
         parent = nHand.parent;
+
+        newHandRotation = hand.rotation;
 
         CancelHand();
     }
     public void SetHandPosition(Vector3 position)
     {
-        newHandPosition = position;
+        newHandPosition = position;     
         goHome = false;
+    }
+
+    public void SetHandRotation(Quaternion rotation)
+    {
+        newHandRotation = rotation;
     }
 
     public void CancelHand()
@@ -418,7 +428,10 @@ public class Arm
             if (left)
                 modifier = -1f;
 
-            hand.localPosition = Vector3.Lerp(hand.localPosition, new Vector3(0.6f * modifier, 0.5f, 0f), Time.deltaTime * handSpeed);
+            hand.localPosition = Vector3.Lerp(hand.localPosition, new Vector3(0.6f * modifier, 0.5f, -0.25f), Time.deltaTime * handSpeed);
+
         }
+
+        hand.rotation = Quaternion.Lerp(hand.rotation, newHandRotation, Time.deltaTime * handSpeed);
     }
 }
