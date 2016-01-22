@@ -8,38 +8,40 @@ public class Player : MonoBehaviour
     public float walkSpeed = 2f;
     public float runSpeed = 7f;
 
-    public Vector3 moveForward;
-    public Vector3 moveRight;
+    private Vector3 moveForward;
+    private Vector3 moveRight;
 
-    public float currentSpeed = 0f;
-    public float speedChange = 3.5f;
+    private float currentSpeed = 0f;
+    private float speedChange = 3.5f;
 
     public float jumpForce = 10f;
     private bool jumpLock = false;
 
-    public bool jumpOwed;
+    private bool jumpOwed;
     private bool pullUpNeeded;
 
     public bool isFalling = true;
-    public bool pullingUp;
+    private bool pullingUp;
 
     public float crouchTime = 2f;
     private bool crouching = false;
     private bool stoppingCrouch = false;
 
-    const float maxLedgeDistance = 0.7f; //Maximum distance a player can be from a ledge point.
+    public float maxLedgeDistance = 0.7f; //Maximum distance a player can be from a ledge point.
 
     public float maxLedgeHeight = 1f; //How high a ledge can be before it'll be grabbed - 2f
-    public float searchRadius = 1f; //How high a ledge can be before it'll be grabbed - 2f
+    public float searchRadius = 1f; //How big the search sphere is
     public float hangHeight = 1.25f; //Height that the play hangs from
 
     public Transform armsAnimator;
 
     public Transform leftHandTransform;
     private Arm left;
+    private Vector3 lastLeftHand;
 
     public Transform rightHandTransform;
     private Arm right;
+    private Vector3 lastRightHand;
 
     public MouseLook headCam;
     public bool grabbing
@@ -107,7 +109,7 @@ public class Player : MonoBehaviour
         else
             moveSpeed = walkSpeed;
 
-        currentSpeed = Mathf.Lerp(currentSpeed, moveSpeed, Time.fixedDeltaTime * speedChange);
+        /*currentSpeed = Mathf.Lerp(currentSpeed, moveSpeed, Time.fixedDeltaTime * speedChange);
 
         //If input is not (0,0,0)
         if (hori != 0 || verti != 0)
@@ -119,6 +121,17 @@ public class Player : MonoBehaviour
         }
 
         GetComponent<Rigidbody>().MovePosition(transform.position + input);
+        */
+
+        input *= moveSpeed;
+
+        // Apply a force that attempts to reach our target velocity
+        Vector3 velocity = GetComponent<Rigidbody>().velocity;
+        Vector3 velocityChange = (input - velocity);
+        velocityChange.x = Mathf.Clamp(velocityChange.x, -moveSpeed, moveSpeed);
+        velocityChange.z = Mathf.Clamp(velocityChange.z, -moveSpeed, moveSpeed);
+        velocityChange.y = 0;
+        GetComponent<Rigidbody>().AddForce(velocityChange, ForceMode.VelocityChange);
 
         if (!isFalling || jumpOwed)
         {
@@ -132,7 +145,7 @@ public class Player : MonoBehaviour
 
                 if (pullUpNeeded)
                 {
-                    vel.y *= 1.15f;
+                   // vel.y *= 1.15f;
                     StartCoroutine("StartCrouch");
                 }
 
@@ -236,8 +249,11 @@ public class Player : MonoBehaviour
         else
         {
             armsAnimator.parent = transform;
+            armsAnimator.rotation = Quaternion.Lerp(armsAnimator.rotation,transform.rotation,Time.deltaTime * 5f);
+
             moveForward = transform.forward;
             moveRight = transform.right;
+
         }
 
     }
@@ -245,19 +261,51 @@ public class Player : MonoBehaviour
     private void UpdateHands()
     {
         int layerMask = 1 << 8;
-        RaycastHit[] nearbyPoints = Physics.SphereCastAll(transform.position, searchRadius, Vector3.up, maxLedgeHeight, layerMask, QueryTriggerInteraction.Collide);
+        //RaycastHit[] nearbyPoints = Physics.SphereCastAll(transform.position, searchRadius, Vector3.up, maxLedgeHeight, layerMask, QueryTriggerInteraction.Collide);
 
-        if (nearbyPoints != null && nearbyPoints.Length > 0)
+        //if (nearbyPoints != null && nearbyPoints.Length > 0)
+       // {
+        Vector3 halfRight = moveRight / 2f;
+        Vector3 handSize = moveRight / 10f;
+        RaycastHit chosenLeft, chosenRight;
+
+        bool leftCatch, rightCatch;
+
+        leftCatch = Physics.SphereCast(transform.position - halfRight, searchRadius, Vector3.up, out chosenLeft, maxLedgeHeight, layerMask, QueryTriggerInteraction.Collide);
+        rightCatch = Physics.SphereCast(transform.position + halfRight, searchRadius, Vector3.up, out chosenRight, maxLedgeHeight, layerMask, QueryTriggerInteraction.Collide);
+
+        if(leftCatch)
         {
-            Vector3 halfRight = moveRight / 2f;
-
-            RaycastHit chosenLeft = NearestPoint(nearbyPoints, transform.position - halfRight);
-            RaycastHit chosenRight = NearestPoint(nearbyPoints, transform.position + halfRight);
-
-            Vector3 handSize = moveRight / 10f;
+            lastLeftHand = chosenLeft.point;
             left.SetHandPosition(chosenLeft.point - handSize);
+        }
+        else
+        {
+            if(rightCatch)
+            {
+                lastLeftHand = chosenRight.point;
+                left.SetHandPosition(chosenRight.point - handSize);
+            }
+        }
+        
+        if (rightCatch)
+        {
+            lastRightHand = chosenRight.point;
             right.SetHandPosition(chosenRight.point + handSize);
         }
+        else
+        {
+            if (leftCatch)
+            {
+                lastRightHand = chosenLeft.point;
+                right.SetHandPosition(chosenLeft.point + handSize);
+            }
+        }
+
+        //RaycastHit chosenLeft = NearestPoint(nearbyPoints, transform.position - halfRight);
+        //RaycastHit chosenRight = NearestPoint(nearbyPoints, transform.position + halfRight);
+
+       // }
     }
 
     private void CheckGrab()
@@ -289,6 +337,10 @@ public class Player : MonoBehaviour
                 grabbing = false;
             }
 
+        }
+        else
+        {
+            grabbing = false;
         }
     }
 

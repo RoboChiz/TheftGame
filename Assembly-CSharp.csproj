@@ -50,6 +50,9 @@
      <Compile Include="Assets\Scripts\Light Shafts\LightShafts.Utils.cs" />
      <Compile Include="Assets\Scripts\Light Shafts\LightShafts.cs" />
      <Compile Include="Assets\Scripts\MouseLook.cs" />
+     <Compile Include="Assets\Scripts\New Player Scripts\PlayerArms.cs" />
+     <Compile Include="Assets\Scripts\New Player Scripts\PlayerGrab.cs" />
+     <Compile Include="Assets\Scripts\New Player Scripts\PlayerMovement.cs" />
      <Compile Include="Assets\Scripts\Player.cs" />
      <None Include="Assets\Standard Assets\Effects\GlassRefraction\Shaders\GlassStainedBumpDistort.shader" />
      <None Include="Assets\Standard Assets\Effects\ImageEffects\Shaders\_BloomAndFlares\BlendOneOne.shader" />

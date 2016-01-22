@@ -41,14 +41,23 @@ public class MouseLook : MonoBehaviour
         else
             Cursor.lockState = CursorLockMode.None;
 
+        float inputX = 0;
+        float inputY = 0;
+
+        inputX += Input.GetAxis("Mouse X");
+        inputX += Input.GetAxis("RSHorizontal") * Time.deltaTime * 50f;
+
+        inputY += Input.GetAxis("Mouse Y");
+        inputY += Input.GetAxis("RSVertical") * Time.deltaTime * 50f;
+
         if (hideCursor)
         {
             if (axes == RotationAxes.MouseXAndY)
             {
                 if (!lockInput)
                 {
-                    rotationX += Input.GetAxis("Mouse X") * sensitivity;
-                    rotationY += Input.GetAxis("Mouse Y") * sensitivity;
+                    rotationX += inputX * sensitivity;
+                    rotationY += inputY * sensitivity;
                 }
 
                 rotationX = ClampAngle(rotationX, minimumX, maximumX);
@@ -62,7 +71,7 @@ public class MouseLook : MonoBehaviour
             else if (axes == RotationAxes.MouseX)
             {
                 if (!lockInput)
-                    rotationX += Input.GetAxis("Mouse X") * sensitivity;
+                    rotationX += inputX * sensitivity;
 
                 rotationX = ClampAngle(rotationX, minimumX, maximumX);
 
@@ -72,7 +81,7 @@ public class MouseLook : MonoBehaviour
             else
             {
                 if (!lockInput)
-                    rotationY += Input.GetAxis("Mouse Y") * sensitivity;
+                    rotationY += inputY * sensitivity;
 
                 rotationY = ClampAngle(rotationY, minimumY, maximumY);
 

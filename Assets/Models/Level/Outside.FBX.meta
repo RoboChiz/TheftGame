@@ -9,19 +9,44 @@ ModelImporter:
     100002: FencePost
     100004: Ground
     100006: //RootNode
+    100008: Object
+    100010: Building
+    100012: Object002
+    100014: Statue
+    100016: Fountain_Water
     400000: Capsule001
     400002: FencePost
     400004: Ground
     400006: //RootNode
+    400008: Object
+    400010: Building
+    400012: Object002
+    400014: Statue
+    400016: Fountain_Water
     2300000: Capsule001
     2300002: FencePost
     2300004: Ground
+    2300006: Object
+    2300008: Building
+    2300010: Object002
+    2300012: Statue
+    2300014: Fountain_Water
     3300000: Capsule001
     3300002: FencePost
     3300004: Ground
+    3300006: Object
+    3300008: Building
+    3300010: Object002
+    3300012: Statue
+    3300014: Fountain_Water
     4300000: Ground
     4300002: Capsule001
     4300004: FencePost
+    4300006: Object
+    4300008: Building
+    4300010: Object002
+    4300012: Statue
+    4300014: Fountain_Water
   materials:
     importMaterials: 1
     materialName: 0
